@@ -74,7 +74,6 @@ vagrant up
 * Starts the HEVD driver service
 * Compiles `fuzzer.c` using LLVM sanitizers:
    * `fuzzer`, `coverage=edge`, `trace-cmp`, `trace-div`
-* Executes the fuzzer. See [Fuzzer](https://github.com/MikeHorn-git/WKD#fuzzer) section
 
 ```bash
 VAGRANT_FUZZER=true vagrant up
