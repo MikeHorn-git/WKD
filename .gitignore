@@ -1,0 +1,8 @@
+# Fuzzer
+fuzzer.exe
+fuzzer.exp
+fuzzer.lib
+fuzzer.obj
+
+# Vagrant
+.vagrant
