@@ -1,30 +1,31 @@
 {
   description = "Windows Kernel development";
 
-  inputs = { nixpkgs.url = "github:nixos/nixpkgs"; };
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+  };
 
-  outputs = { self, nixpkgs }:
-    let pkgs = import nixpkgs { system = "x86_64-linux"; };
-    in {
-      devShells.x86_64-linux.lint = pkgs.mkShell {
-        nativeBuildInputs = [
-          pkgs.clang
-          pkgs.mdl
-          pkgs.nixfmt-classic
-          pkgs.powershell
-          pkgs.rubocop
-          pkgs.statix
-        ];
+  outputs =
+    {
+      self,
+      nixpkgs,
+      systems,
+      treefmt-nix,
+    }:
 
-        shellHook = ''
-          clang-format -i fuzzer/fuzzer.c
-          mdl README.md
-          nixfmt flake.nix
-          statix check flake.nix
-          pwsh -NoProfile -Command "Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser -AllowClobber"
-          pwsh -NoProfile -Command "Invoke-ScriptAnalyzer ."
-          rubocop -A Vagrantfile
-        '';
-      };
+    let
+      pkgs = import nixpkgs { system = "x86_64-linux"; };
+
+      # Small tool to iterate over each systems
+      eachSystem = f: nixpkgs.lib.genAttrs (import systems) (system: f nixpkgs.legacyPackages.${system});
+      # Eval the treefmt modules from ./treefmt.nix
+      treefmtEval = eachSystem (pkgs: treefmt-nix.lib.evalModule pkgs ./treefmt.nix);
+    in
+    {
+      formatter = eachSystem (pkgs: treefmtEval.${pkgs.system}.config.build.wrapper);
+      checks = eachSystem (pkgs: {
+        formatting = treefmtEval.${pkgs.system}.config.build.check self;
+      });
     };
 }
